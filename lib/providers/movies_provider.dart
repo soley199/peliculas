@@ -12,7 +12,12 @@ class MoviesProvider extends ChangeNotifier{
 
   List<Movie> onDisplayMovies = [];
   List<Movie> popularMovies = [];
+
+  Map<int, List<Cast>> movieCast = {};
+
   int _pupolarpage = 0;
+
+
 
   MoviesProvider(){
     print('movieProvider Inicializado');
@@ -21,7 +26,7 @@ class MoviesProvider extends ChangeNotifier{
   }
 
   Future<String> _getJsonFata(String endpoint, [int page = 1]) async {
-     var url =
+     final url =
       Uri.https(_baseUrl, endpoint, {
         'api_key': _apyKey,
         'language': _language,
@@ -52,5 +57,33 @@ class MoviesProvider extends ChangeNotifier{
   //print(popularMovies[0]);
   notifyListeners();
 
+  }
+
+  Future<List <Cast>> getMovieCast(int movieId) async{
+    if(movieCast.containsKey(movieId)) return movieCast[movieId]!;
+
+    //TODO Revisando mapa
+
+    print('Pidiendo info servidor Actores');
+    final jsonData =  await this._getJsonFata('3/movie/${movieId}/credits');
+
+    final creditsResponse =CreditsResponse.fromJson(jsonData);
+
+    movieCast[movieId] = creditsResponse.cast;
+
+    return creditsResponse.cast;
+  }
+
+  Future <List <Movie>> searchMovie(String query)  async{
+    final url = Uri.https(_baseUrl, '3/search/movie', {
+        'api_key': _apyKey,
+        'language': _language,
+        'query': query
+        });
+
+        final response = await http.get(url);
+      final searchResponse = SearchResponse.fromJson(response.body);
+
+      return searchResponse.results;
   }
 }
